@@ -24,6 +24,8 @@ class Node:
         self.hovered = False
         self.selected = False
 
+        self._neighbors = []
+
         Node.node_ids += 1
 
     def render(self, screen, font):
@@ -57,6 +59,17 @@ class Node:
         label = font.render(self.text, 1, (0, 0, 0))
         screen.blit(label, (self.pos[0]-6, self.pos[1]-5))
 
+    def add_neighbor(self, node):
+        self._neighbors.append(node)
+
+    @property
+    def neighbors(self):
+        return self._neighbors
+
+    @property
+    def hex_color(self):
+        return '#%02x%02x%02x' % self.color
+
     def __str__(self):
         return '({})'.format(self.id)
 
@@ -67,6 +80,9 @@ class Node:
 class Connection:
     def __init__(self, nodes=(None, None), weight=0, color=(0, 0, 0)):
         self.nodes = nodes
+        self.nodes[0].add_neighbor((self.nodes[1], self))
+        self.nodes[1].add_neighbor((self.nodes[0], self))
+
         self.weight = weight
         self.color = color
 

@@ -1,11 +1,12 @@
-from models import *
-from views import ToolBar
-# from controllers import dijkstra
+import os
+import random
+import threading
+import tkinter as tk
 
 import pygame
-import tkinter as tk
-import threading
-import random
+
+from models import *
+from views import ToolBar
 
 
 def random_position() -> int:
@@ -38,13 +39,20 @@ def on_node_hover(graph):
 
 def main():
     global running
+
+    # sets the window position
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (100, 100)
+
     # initialize pygame
     pygame.init()
     pygame.font.init()
 
     # initialize tkinter
-    root = tk.Tk()
-    root.protocol("WM_DELETE_WINDOW", quit_callback)
+    graph = Graph()
+    toolbar = ToolBar(graph)
+    toolbar.geometry(
+        '{}x{}+100+600'.format(toolbar.winfo_width(), toolbar.winfo_height()))
+    toolbar.protocol("WM_DELETE_WINDOW", quit_callback)
 
     # start pygame clock
     clock = pygame.time.Clock()
@@ -61,12 +69,6 @@ def main():
     # sets the window size
     screen = pygame.display.set_mode((500, 500))
 
-    graph = Graph()
-
-    # Creating the toolbar window
-    toolbar = ToolBar(master=root, graph=graph)
-    toolbar.pack()
-
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -75,7 +77,6 @@ def main():
                 toolbar.tool.handleMouseMove(event)
 
                 on_node_hover(graph)
-
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 now = pygame.time.get_ticks()
                 if now - last_click <= double_click_duration:
