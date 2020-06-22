@@ -11,6 +11,7 @@ This application is still UNDER DEVELOPMENT!!
     - Add Tool (Adding nodes)
     - Connect Tool (Connecting nodes)
     - Delete Tool (Deleting nodes therefore it's connections)
+  - The ability to customize nodes (text / color / its connections weights)
 
 ### Tech
 
@@ -35,8 +36,6 @@ $ python main.py
 
 ### Todos
 
- - Changing the nodes attributes
- - Changing the connections attributes
  - Implementation of dijkstra algorithm in an existing graph
  - Reorganizing the whole project
 
