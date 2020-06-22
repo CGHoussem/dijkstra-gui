@@ -49,7 +49,7 @@ class NodeConfigurationFrame(Toplevel):
         self._text_var = StringVar(value=self.node.text)
 
         self._color_picker = colorchooser.Chooser(self)
-        self._color = (None, self.node.hex_color)
+        self._color = (self.node.color, self.node.hex_color)
         self._change_text_preview = self.register(self._preview)
         self._initUI()
 
