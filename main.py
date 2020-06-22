@@ -21,9 +21,6 @@ def random_node(nodes) -> Node:
     return Node(random_position(), random_position(), 25, random_color(), '{}'.format(len(nodes)+1))
 
 
-running = True
-
-
 def quit_callback():
     global running
     running = False
@@ -35,6 +32,9 @@ def on_node_hover(graph):
         if node.pos[0] <= pygame.mouse.get_pos()[0]+node.radius and node.pos[0] >= pygame.mouse.get_pos()[0]-node.radius \
                 and node.pos[1] <= pygame.mouse.get_pos()[1]+node.radius and node.pos[1] >= pygame.mouse.get_pos()[1]-node.radius:
             node.hovered = True
+
+
+running = True
 
 
 def main():

@@ -18,7 +18,7 @@ class Node:
     def __init__(self, text='', pos=(0, 0)):
         self.id = Node.node_ids
         self.pos = pos
-        self.radius = 15
+        self.radius = 20
         self.color = (255, 0, 0)
         self.text = text
         self.hovered = False
@@ -54,6 +54,11 @@ class Node:
 
         # drawing the circle
         draw.circle(screen, (r, g, b), self.pos, self.radius)
+        # drawing the outline
+        width = 1
+        if self.hovered or self.selected:
+            width = 2
+        draw.circle(screen, (0, 0, 0), self.pos, self.radius, width)
 
         # drawing the text
         label = font.render(self.text, 1, (0, 0, 0))

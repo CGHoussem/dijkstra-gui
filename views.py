@@ -92,6 +92,10 @@ class NodeConfigurationFrame(Toplevel):
         self._color = self._color_picker.show()
         self._draw_node(self._temp_node)
 
+    def destroy(self):
+        self.node.selected = False
+        return super().destroy()
+
     def _save_node(self):
         self.node.text = self._temp_node.text
         self.node.color = (
@@ -99,6 +103,7 @@ class NodeConfigurationFrame(Toplevel):
             floor(self._color[0][1]),
             floor(self._color[0][2])
         )
+        self.node.selected = False
         self.destroy()
 
     def _draw_node(self, node):
@@ -143,7 +148,7 @@ class MoveTool(Tool):
         self.button = Button(self.master, text="Move Node",
                              image=self.image, command=self.on_click)
 
-        self._selected_node = None
+        self._selected_node: Node = None
 
     def on_click(self):
         self.master.tool = self
@@ -152,6 +157,7 @@ class MoveTool(Tool):
         self._selected_node = mouse_on_a_node(event.pos, self.graph.nodes)
 
         if double_click and self._selected_node:
+            self._selected_node.selected = True
             config_frame = NodeConfigurationFrame(
                 self.master, self.graph, self._selected_node)
             config_frame.geometry('250x250+600+600')
