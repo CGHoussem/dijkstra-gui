@@ -76,7 +76,7 @@ class Node:
         return '#%02x%02x%02x' % self.color
 
     def __str__(self):
-        return '({})'.format(self.id)
+        return 'Node ({})'.format(self.text)
 
     def __repr__(self):
         return str(self)

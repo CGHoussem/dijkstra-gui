@@ -49,36 +49,23 @@ def update_distances(G: Graph, node1: Node, node2: Node):
         :type node2: Node
     """
     p = get_weight(G, node1, node2)
+    print(G.distances)
+    print('-'*10)
+    print(G.distances[node2])
+    print('-'*10)
+    print(G.distances[node1])
+
     if G.distances[node2] > G.distances[node1] + p:
         G.distances[node2] = G.distances[node1] + p
         G.preds[node2] = node1
 
 
-def get_neighboors(G, node) -> list():
-    """
-    This function returns a list of nodes that are neighbors of a certain node
-        :param G: graph
-        :param node: the node to search its neighbors
-        :type G: Graph
-        :type node1: Node
-        :return: list of neighbor nodes
-        :rtype: list()
-    """
-    nodes = []
-    for connection in G.connections:
-        if connection.nodes[0] == node:
-            nodes.append(connection.nodes[1])
-        elif connection.nodes[1] == node:
-            nodes.append(connection.nodes[0])
-    return nodes
-
-
 def dijkstra(G: Graph, start_node: Node):
     init(G, start_node)
     Q = G.nodes.copy()
-    
+
     while len(Q) != 0:
         node1 = search_min(G, Q)
         Q.remove(node1)
-        for node2 in get_neighboors(G, node1):
+        for node2 in node1.neighbors:
             update_distances(G, node1, node2)

@@ -1,10 +1,12 @@
-from tkinter import (HORIZONTAL, Canvas, N, PhotoImage, S, StringVar, Tk,
-                     Toplevel, X, colorchooser)
-from tkinter.ttk import Button, Entry, Frame, Label, Separator
-
-from models import *
 import copy
 from math import floor
+from tkinter import (HORIZONTAL, Canvas, N, PhotoImage, S, IntVar, StringVar, Tk,
+                     Toplevel, X, colorchooser, messagebox)
+from tkinter.ttk import (Button, Entry, Frame, Label, Separator, Radiobutton)
+
+from models import *
+
+from controllers import dijkstra
 
 
 def mouse_on_a_node(pos, nodes) -> Node:
@@ -25,7 +27,7 @@ class ToolBar(Tk):
         self.tools = []
 
         self._initTools()
-        self.initUI()
+        self._initUI()
         self.update()
 
     def _initTools(self):
@@ -34,9 +36,74 @@ class ToolBar(Tk):
         self.tools.append(ConnectionTool(self, self.graph))
         self.tools.append(DeleteTool(self, self.graph))
 
-    def initUI(self):
+    def _initUI(self):
         for i, tool in enumerate(self.tools):
             tool.button.grid(row=0, column=i)
+        Button(self, text='Find Shortest Path', command=self._open_shorest_path_win).grid(
+            row=0, column=len(self.tools), sticky='nsew')
+
+    def _open_shorest_path_win(self):
+        DijkstraFrame(self.master, self.graph)
+
+
+class DijkstraFrame(Toplevel):
+    def __init__(self, master=None, graph=None):
+        super().__init__(master=master)
+        self.graph = graph
+        self.title('Dijkstra - Find the shortest path')
+
+        self._f_node_var = IntVar()
+        self._l_node_var = IntVar()
+        self._initUI()
+
+    def _initUI(self):
+        length = len(self.graph.nodes)
+        Label(self, text='Find the shortest path').grid(
+            row=0, column=0, columnspan=2, sticky='w')
+
+        Separator(self, orient=HORIZONTAL).grid(
+            row=1, column=0, columnspan=2, sticky='nsew')
+
+        Label(self, text='Start node').grid(row=2, column=0, sticky='w')
+        for i, node in enumerate(self.graph.nodes):
+            Radiobutton(self, text=str(node), variable=self._f_node_var,
+                        value=node.id).grid(row=3+i, column=1, sticky='w')
+
+        Label(self, text='End node').grid(row=3+length, column=0, sticky='w')
+        for i, node in enumerate(self.graph.nodes):
+            Radiobutton(self, text=str(node), variable=self._l_node_var,
+                        value=node.id).grid(row=4+length+i, column=1, sticky='w')
+
+        Separator(self, orient=HORIZONTAL).grid(
+            row=length*2+4, column=0, columnspan=2, sticky='nsew')
+
+        Button(self, text='Cancel', command=self.destroy).grid(
+            row=length*2+5, column=0)
+        Button(self, text='Calculate', command=self._calculate).grid(
+            row=length*2+5, column=1)
+
+    def destroy(self):
+        return super().destroy()
+
+    def _calculate(self):
+        f_node_id = int(self._f_node_var.get())
+        l_node_id = int(self._l_node_var.get())
+
+        if f_node_id == l_node_id:
+            messagebox.showerror(
+                'Error calculating path', 'You should select different nodes for calculations')
+        else:
+            f_node = l_node = None
+            for node in self.graph.nodes:
+                if node.id == f_node_id:
+                    f_node = node
+                elif node.id == l_node_id:
+                    l_node = node
+                if f_node and l_node:
+                    break
+            dijkstra(self.graph, f_node)
+            print(self.graph.distances)
+            print(self.graph.preds)
 
 
 class NodeConfigurationFrame(Toplevel):
@@ -192,6 +259,7 @@ class AddNodeTool(Tool):
                 self.graph.nodes.append(node)
 
 
+# TODO: deny making connection to itself
 class ConnectionTool(Tool):
     def __init__(self, master=None, graph=Graph):
         super().__init__(master, graph)
@@ -221,8 +289,8 @@ class ConnectionTool(Tool):
                 self._end_node = node
 
                 # connecting the two nodes
-                self.graph.connections.append(
-                    Connection((self._start_node, self._end_node)))
+                connection = Connection((self._start_node, self._end_node))
+                self.graph.connections.append(connection)
 
         self._start_node = None
 
