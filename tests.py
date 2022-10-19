@@ -1,3 +1,7 @@
+"""
+This module is contains the different tests to be run by unittest
+"""
+
 import math
 import random
 import unittest
@@ -37,17 +41,29 @@ graph = Graph(nodes, connections)
 
 
 class TestControllersMethods(unittest.TestCase):
+    """
+    This class is responsible for testing the different 'controllers.py' methods
+    """
     def test_init(self):
+        """
+        This test function tests the 'init()' method
+        """
         controllers.init(graph, graph.nodes[0])
         self.assertEqual(graph.distances[graph.nodes[0]], 0)
         self.assertEqual(graph.distances[graph.nodes[random.randint(1, len(nodes)-1)]], math.inf)
 
     def test_search_min(self):
+        """
+        This test function tests the 'search_min(g, q)' method
+        """
         queue = graph.nodes.copy()
         min_d_node = controllers.search_min(graph, queue)
         self.assertEqual(min_d_node, graph.nodes[0])
 
     def test_find_min_distance(self):
+        """
+        This test function tests the 'find_min_distance(g, n1, n2)' method
+        """
         min_d = controllers.find_min_distance(graph, nodes[0], nodes[1])
         self.assertEqual(min_d, 4)
         min_d = controllers.find_min_distance(graph, nodes[0], nodes[4])
@@ -58,6 +74,9 @@ class TestControllersMethods(unittest.TestCase):
         self.assertEqual(min_d, 14)
 
     def test_get_weight(self):
+        """
+        This test function tests the 'get_weight(g, n1, n2)' method
+        """
         weight = controllers.get_weight(graph, graph.nodes[0], graph.nodes[7])
         self.assertEqual(weight, 8)
         weight = controllers.get_weight(graph, graph.nodes[7], graph.nodes[6])
@@ -68,7 +87,13 @@ class TestControllersMethods(unittest.TestCase):
         self.assertEqual(weight, -1)
 
 class TestModelsMethods(unittest.TestCase):
+    """
+    This class is responsible for testing the different 'models.py' methods
+    """
     def test_random_position(self):
+        """
+        This test function tests the 'random_position()' method
+        """
         pos_range = list(range(25, 476))
         for _ in range(100):
             pos_x, pos_y = random_position()
@@ -76,6 +101,9 @@ class TestModelsMethods(unittest.TestCase):
             self.assertIn(pos_y, pos_range)
 
     def test_random_color(self):
+        """
+        This test function tests the 'random_color()' method
+        """
         color_range = list(range(0, 256))
         for _ in range(100):
             color_r, color_g, color_b = random_color()
