@@ -1,14 +1,14 @@
-from pygame import draw, time
-from math import sin, ceil
-
+from typing import Tuple
 import random
 
+from pygame import draw
 
-def random_position() -> (int, int):
+
+def random_position() -> Tuple[int, int]:
     return (random.randint(25, 500-25), random.randint(25, 500-25))
 
 
-def random_color() -> (int, int, int):
+def random_color() -> Tuple[int, int, int]:
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
@@ -126,10 +126,15 @@ class Tool:
     def __init__(self, master=None, graph=None):
         super().__init__()
 
-    def on_click(self): pass
+    def on_click(self):
+        pass
 
-    def handleMouseDown(self, event, double_click=False): pass
-    def handleMouseUp(self, event): pass
-    def handleMouseMove(self, event): pass
+    def handleMouseDown(self, event, double_click=False):
+        pass
+    def handleMouseUp(self, event):
+        pass
+    def handleMouseMove(self, event):
+        pass
 
-    def renderPreview(self, screen): pass
+    def renderPreview(self, screen):
+        pass

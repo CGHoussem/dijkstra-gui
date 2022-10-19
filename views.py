@@ -1,10 +1,10 @@
 import copy
 from math import floor
-from tkinter import (HORIZONTAL, Canvas, N, PhotoImage, S, IntVar, StringVar, Tk,
-                     Toplevel, X, colorchooser, messagebox)
+from tkinter import (HORIZONTAL, Canvas, PhotoImage, IntVar, StringVar, Tk,
+                     Toplevel, colorchooser, messagebox)
 from tkinter.ttk import (Button, Entry, Frame, Label, Separator, Radiobutton)
 
-from models import *
+from models import Node, Tool, Graph, Connection, draw
 
 from controllers import dijkstra
 
@@ -102,8 +102,8 @@ class DijkstraFrame(Toplevel):
                 if f_node and l_node:
                     break
             dijkstra(self.graph, f_node)
-            print(self.graph.distances)
-            print(self.graph.preds)
+            print(f'Minimum distance to the other nodes from {f_node}:\n {self.graph.distances}')
+            print(f'preds:\n {self.graph.preds}')
 
 
 class NodeConfigurationFrame(Toplevel):

@@ -1,30 +1,15 @@
 import os
-import random
-import threading
-import tkinter as tk
 
 import pygame
+from pygame.locals import QUIT, MOUSEMOTION, MOUSEBUTTONUP, MOUSEBUTTONDOWN
 
-from models import *
+from models import Graph
 from views import ToolBar
 
 
-def random_position() -> int:
-    return random.randint(25, 500-25)
-
-
-def random_color() -> (int, int, int):
-    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-
-def random_node(nodes) -> Node:
-    return Node(random_position(), random_position(), 25, random_color(), '{}'.format(len(nodes)+1))
-
-
 def quit_callback():
-    global running
-    running = False
-
+    global RUNNING
+    RUNNING = False
 
 def on_node_hover(graph):
     for node in graph.nodes:
@@ -33,12 +18,10 @@ def on_node_hover(graph):
                 and node.pos[1] <= pygame.mouse.get_pos()[1]+node.radius and node.pos[1] >= pygame.mouse.get_pos()[1]-node.radius:
             node.hovered = True
 
-
-running = True
-
+RUNNING = True
 
 def main():
-    global running
+    global RUNNING
 
     # sets the window position
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (100, 100)
@@ -64,20 +47,20 @@ def main():
     last_click = 0
 
     # sets the window title
-    screen = pygame.display.set_caption(u'Dijkstra 2019-2020')
+    screen = pygame.display.set_caption('Dijkstra 2019-2020')
 
     # sets the window size
     screen = pygame.display.set_mode((500, 500))
 
-    while running:
+    while RUNNING:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEMOTION:
+            if event.type == QUIT:
+                RUNNING = False
+            elif event.type == MOUSEMOTION:
                 toolbar.tool.handleMouseMove(event)
 
                 on_node_hover(graph)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == MOUSEBUTTONDOWN:
                 now = pygame.time.get_ticks()
                 if now - last_click <= double_click_duration:
                     double_click = True
@@ -87,7 +70,7 @@ def main():
 
                 toolbar.tool.handleMouseDown(event, double_click)
 
-            elif event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == MOUSEBUTTONUP:
                 toolbar.tool.handleMouseUp(event)
 
         # Rendering
