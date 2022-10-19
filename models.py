@@ -1,3 +1,7 @@
+"""
+This is the Models module
+"""
+
 from typing import Tuple
 import random
 
@@ -5,18 +9,28 @@ from pygame import draw
 
 
 def random_position() -> Tuple[int, int]:
+    """
+    This methods returns a random position (x, y)
+    """
     return (random.randint(25, 500-25), random.randint(25, 500-25))
 
 
 def random_color() -> Tuple[int, int, int]:
+    """
+    This methods returns a random color (r, g, b).
+        rgb values are from 0 to 255
+    """
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
 class Node:
+    """
+    Node class
+    """
     node_ids = 0
 
     def __init__(self, text='', pos=(0, 0)):
-        self.id = Node.node_ids
+        self._id = Node.node_ids
         self.pos = pos
         self.radius = 20
         self.color = (255, 0, 0)
@@ -29,31 +43,22 @@ class Node:
         Node.node_ids += 1
 
     def render(self, screen, font):
-        (r, g, b) = self.color
+        """
+        This is the render method. It renders the Node object in the window.
+        """
+        (color_r, color_g, color_b) = self.color
 
         if self.hovered:
-            r = self.color[0]+50
-            if r > 255:
-                r = 255
-            g = self.color[1]+50
-            if g > 255:
-                g = 255
-            b = self.color[2]+50
-            if b > 255:
-                b = 255
+            color_r = min(self.color[0]+50, 255)
+            color_g = min(self.color[1]+50, 255)
+            color_b = min(self.color[2]+50, 255)
         if self.selected:
-            r = self.color[0]-50
-            if r < 0:
-                r = 0
-            g = self.color[1]-50
-            if g < 0:
-                g = 0
-            b = self.color[2]-50
-            if b < 0:
-                b = 0
+            color_r = max(self.color[0]-50, 0)
+            color_g = max(self.color[1]-50, 0)
+            color_b = max(self.color[2]-50, 0)
 
         # drawing the circle
-        draw.circle(screen, (r, g, b), self.pos, self.radius)
+        draw.circle(screen, (color_r, color_g, color_b), self.pos, self.radius)
         # drawing the outline
         width = 1
         if self.hovered or self.selected:
@@ -65,24 +70,43 @@ class Node:
         screen.blit(label, (self.pos[0]-6, self.pos[1]-5))
 
     def add_neighbor(self, node):
+        """
+        This method adds the node object to a given node's neighbors.
+        """
         self._neighbors.append(node)
 
     @property
+    def node_id(self):
+        """
+        This returns the node id propery.
+        """
+        return self._id
+
+    @property
     def neighbors(self):
+        """
+        This property returns the neighbors of the current node.
+        """
         return self._neighbors
 
     @property
     def hex_color(self):
-        return '#%02x%02x%02x' % self.color
+        """
+        This property returns the color of the current node in hex format.
+        """
+        return f'#{self.color[0]:02x}{self.color[1]:02x}{self.color[2]:02x}'
 
     def __str__(self):
-        return 'Node ({})'.format(self.text)
+        return f'Node ({self.text})'
 
     def __repr__(self):
         return str(self)
 
 
 class Connection:
+    """
+    Connection class
+    """
     def __init__(self, nodes=(None, None), weight=0, color=(0, 0, 0)):
         self.nodes = nodes
         self.nodes[0].add_neighbor((self.nodes[1], self))
@@ -92,6 +116,9 @@ class Connection:
         self.color = color
 
     def render(self, screen, font):
+        """
+        This methods renders the connect object (line) in the window.
+        """
         node_1_pos = self.nodes[0].pos
         node_2_pos = self.nodes[1].pos
 
@@ -102,39 +129,58 @@ class Connection:
         label = font.render(str(self.weight), 1, (0, 0, 0))
 
         # calculating the median position of the two nodes
-        x = (node_1_pos[0] + node_2_pos[0]) / 2
-        y = (node_1_pos[1] + node_2_pos[1]) / 2
+        pos_x = (node_1_pos[0] + node_2_pos[0]) / 2
+        pos_y = (node_1_pos[1] + node_2_pos[1]) / 2
 
-        screen.blit(label, (x, y))
+        screen.blit(label, (pos_x, pos_y))
 
     def __str__(self):
-        return '({},{})[{}]'.format(self.nodes[0], self.nodes[1], self.weight)
+        return f'({self.nodes[0]},{self.nodes[1]})[{self.weight}]'
 
     def __repr__(self):
         return str(self)
 
 
 class Graph:
-    def __init__(self, nodes=[], connections=[]):
+    """Graph class"""
+    def __init__(self, nodes=None, connections=None):
         self.nodes = nodes
+        if self.nodes is None:
+            self.nodes = []
         self.connections = connections
+        if self.connections is None:
+            self.connections = []
         self.distances = {}
         self.preds = {}
 
 
 class Tool:
-    def __init__(self, master=None, graph=None):
+    """Tool class"""
+    def __init__(self, _master=None, _graph=None):
         super().__init__()
 
     def on_click(self):
-        pass
+        """
+        This is the 'on click' callback
+        """
 
-    def handleMouseDown(self, event, double_click=False):
-        pass
-    def handleMouseUp(self, event):
-        pass
-    def handleMouseMove(self, event):
-        pass
+    def handle_mouse_down(self, event, double_click=False):
+        """
+        This is the 'handle mouse down' callback
+        """
 
-    def renderPreview(self, screen):
-        pass
+    def handle_mouse_up(self, event):
+        """
+        This is the 'handle mouse up' callback
+        """
+
+    def handle_mouse_move(self, event):
+        """
+        This is the 'handle mouse move' callback
+        """
+
+    def render_preview(self, screen):
+        """
+        This method is responsible for rendering a preview of the object \
+            before it's placement.
+        """
