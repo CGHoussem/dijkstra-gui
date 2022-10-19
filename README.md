@@ -36,8 +36,8 @@ $ python main.py
 
 ### Todos
 
- - Implementation of dijkstra algorithm in an existing graph
- - Reorganizing the whole project
+ - Implementation dijkstra algorithm visualization in the created graph
+ - Serialization / Deserialization of created graphs
 
 License
 ----
