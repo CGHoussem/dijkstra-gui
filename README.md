@@ -36,8 +36,9 @@ $ python main.py
 
 ### Todos
 
- - [ ] Implementation dijkstra algorithm visualization in the created graph
+ - [ ] Implementation dijkstra algorithm steps graphically
  - [ ] Serialization / Deserialization of created graphs
+ - [ ] Implementation of directed graphs
 
 License
 ----
