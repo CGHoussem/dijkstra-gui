@@ -10,7 +10,7 @@ from tkinter.ttk import (Button, Entry, Frame, Label, Separator, Radiobutton)
 
 from models import Node, Tool, Graph, Connection, draw
 
-from controllers import dijkstra
+from controllers import dijkstra, find_path
 
 
 def mouse_on_a_node(pos, nodes) -> Node:
@@ -113,9 +113,14 @@ class DijkstraFrame(Toplevel):
                 if f_node and l_node:
                     break
             dijkstra(self.graph, f_node)
-            print(f'Minimum distance to the other nodes from {f_node}:\n {self.graph.distances}')
-            print(f'preds:\n {self.graph.preds}')
 
+            # highlight path
+            cnx = find_path(self.graph, f_node, l_node, [])
+            for conn in self.graph.connections:
+                conn.disable_highlight()
+            for conn in cnx:
+                conn.enable_highlight()
+            # ?new feature: print the distances to other nodes in a table graphically
 
 class NodeConfigurationFrame(Toplevel):
     """Node configuration frame class"""
