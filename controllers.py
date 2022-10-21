@@ -5,7 +5,7 @@ This is where we find the dijkstra methods
 """
 
 import math
-from models import Node, Graph
+from models import Connection, Node, Graph
 
 
 def init(graph: Graph, start_node: Node):
@@ -84,3 +84,26 @@ def dijkstra(graph: Graph, start_node: Node):
         min_d_node = search_min(graph, queue)
         update_distances(graph, min_d_node)
         queue.remove(min_d_node)
+
+
+def find_path(graph: Graph, start_node: Node, dest_node: Node, ret_list=[]) -> list[Connection]:
+    """
+    This method find the best route (minimal distance path) between start_node and dest_node.
+
+    This method should ONLY be ran after the dijkstra algorithm is applied!
+    """
+    if start_node == dest_node:
+        return None
+
+    pred_node = graph.preds[dest_node]
+    conn = None
+    for conn in graph.connections:
+        if pred_node in conn.nodes and dest_node in conn.nodes:
+            break
+    if conn is None:
+        raise Exception(f'Connection between {pred_node} and {dest_node} not found!')
+
+    ret_list.append(conn)
+    find_path(graph, start_node, pred_node, ret_list)
+
+    return ret_list
