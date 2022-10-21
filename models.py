@@ -107,6 +107,7 @@ class Connection:
     """
     Connection class
     """
+    HIGHLIGHT_COLOR = (255, 0, 0)
     def __init__(self, nodes=(None, None), weight=0, color=(0, 0, 0)):
         self.nodes = nodes
         self.nodes[0].add_neighbor((self.nodes[1], self))
@@ -114,13 +115,37 @@ class Connection:
 
         self.weight = weight
         self.color = color
+        self._highlighted = False
+
+    @property
+    def is_highlighted(self):
+        """
+        This property returns whether the highlighted property is enabled or disabled
+        """
+        return self._highlighted
+
+    def disable_highlight(self):
+        """
+        This methods disables the highlight of the connection (line).
+        """
+        self._highlighted = False
+
+    def enable_highlight(self):
+        """
+        This method enables the highlight of the connection (line).
+        """
+        self._highlighted = True
 
     def render(self, screen, font):
         """
-        This methods renders the connect object (line) in the window.
+        This method renders the connect object (line) in the window.
         """
         node_1_pos = self.nodes[0].pos
         node_2_pos = self.nodes[1].pos
+
+        # drawing the highlight
+        if self._highlighted:
+            draw.line(screen, Connection.HIGHLIGHT_COLOR, node_1_pos, node_2_pos, 6)
 
         # drawing the line
         draw.line(screen, self.color, node_1_pos, node_2_pos, 2)
@@ -135,7 +160,7 @@ class Connection:
         screen.blit(label, (pos_x, pos_y))
 
     def __str__(self):
-        return f'({self.nodes[0]},{self.nodes[1]})[{self.weight}]'
+        return f'{self.nodes[0]} -> {self.nodes[1]} = {self.weight}'
 
     def __repr__(self):
         return str(self)
