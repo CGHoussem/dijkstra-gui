@@ -10,6 +10,8 @@ from models import Graph
 from views import ToolBar
 
 RUNNING = True
+BACKGROUND_COLOR = (240, 240, 240)
+
 
 def quit_callback():
     """
@@ -85,7 +87,7 @@ def main():
 
         # Rendering
         clock.tick(framerate)
-        screen.fill((255, 255, 255))
+        screen.fill(BACKGROUND_COLOR)
 
         toolbar.tool.render_preview(screen)
 
