@@ -12,6 +12,7 @@ This application is still UNDER DEVELOPMENT!!
     - Connect Tool (Connecting nodes)
     - Delete Tool (Deleting nodes therefore it's connections)
   - The ability to customize nodes (text / color / its connections weights)
+  - Console Log of the shortest path from a chosen node to all other nodes
 
 ### Tech
 
@@ -39,6 +40,7 @@ $ python main.py
  - [ ] Implementation dijkstra algorithm steps graphically
  - [ ] Serialization / Deserialization of created graphs
  - [ ] Implementation of directed graphs
+ - [ ] Improve GUI
 
 License
 ----
