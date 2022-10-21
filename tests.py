@@ -86,6 +86,17 @@ class TestControllersMethods(unittest.TestCase):
         weight = controllers.get_weight(graph, graph.nodes[3], graph.nodes[7])
         self.assertEqual(weight, -1)
 
+    def test_find_path(self):
+        """
+        This test function tests the 'find_path(graph, n1, n2)' method
+        """
+        controllers.dijkstra(graph, graph.nodes[0])
+        cnnx = controllers.find_path(graph, graph.nodes[0], graph.nodes[2])
+        self.assertIn(graph.nodes[2], cnnx[0].nodes)
+        self.assertIn(graph.nodes[1], cnnx[0].nodes)
+        self.assertIn(graph.nodes[0], cnnx[1].nodes)
+        self.assertIn(graph.nodes[1], cnnx[1].nodes)
+
 class TestModelsMethods(unittest.TestCase):
     """
     This class is responsible for testing the different 'models.py' methods
