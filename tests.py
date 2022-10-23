@@ -91,7 +91,7 @@ class TestControllersMethods(unittest.TestCase):
         This test function tests the 'find_path(graph, n1, n2)' method
         """
         controllers.dijkstra(graph, graph.nodes[0])
-        cnnx = controllers.find_path(graph, graph.nodes[0], graph.nodes[2])
+        cnnx = controllers.find_path(graph, graph.nodes[0], graph.nodes[2], [])
         self.assertIn(graph.nodes[2], cnnx[0].nodes)
         self.assertIn(graph.nodes[1], cnnx[0].nodes)
         self.assertIn(graph.nodes[0], cnnx[1].nodes)
