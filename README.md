@@ -12,7 +12,7 @@ This application is still UNDER DEVELOPMENT!!
     - Connect Tool (Connecting nodes)
     - Delete Tool (Deleting nodes therefore it's connections)
   - The ability to customize nodes (text / color / its connections weights)
-  - Console Log of the shortest path from a chosen node to all other nodes
+  - Highlight the shortest path between two chosen nodes
 
 ### Tech
 
