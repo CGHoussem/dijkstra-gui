@@ -92,12 +92,9 @@ class DijkstraFrame(Toplevel):
             row=length*2+5, column=0)
         Button(self, text='Calculate', command=self._calculate).grid(
             row=length*2+5, column=1)
-        Button(self, text='Reset', command=self._reset).grid(
-            row=length*2+6, column=1)
 
-    def _reset(self):
-        for conn in self.graph.connections:
-            conn.disable_highlight()
+    # def destroy(self):
+    #     return super().destroy()
 
     def _calculate(self):
         f_node_id = int(self._f_node_var.get())
