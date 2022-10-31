@@ -75,6 +75,12 @@ class Node:
         """
         self._neighbors.append(node)
 
+    def remove_neighbor(self, node):
+        """
+        This method removes the given node object from the node's neighbors.
+        """
+        self._neighbors = [neighbor for neighbor in self._neighbors if neighbor[0] != node]
+
     @property
     def node_id(self):
         """
@@ -178,6 +184,15 @@ class Graph:
         self.distances = {}
         self.preds = {}
 
+    def remove_connection(self, connection):
+        """
+        This method removes a connection from the graph.
+        """
+        first_node = connection.nodes[0]
+        second_node = connection.nodes[1]
+        first_node.remove_neighbor(second_node)
+        second_node.remove_neighbor(first_node)
+        self.connections.remove(connection)
 
 class Tool:
     """Tool class"""

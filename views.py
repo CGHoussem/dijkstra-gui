@@ -351,7 +351,7 @@ class DeleteTool(Tool):
                 if node in connection.nodes:
                     connections_to_delete.append(connection)
             for connection in connections_to_delete:
-                self.graph.connections.remove(connection)
+                self.graph.remove_connection(connection)
 
             # Delete the node
             self.graph.nodes.remove(node)
