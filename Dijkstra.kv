@@ -32,3 +32,51 @@
             size_hint: 1, .9
         ToolBar:
             size_hint: 1, .1
+
+<NodeConfig>:
+    title: 'Node #{} configuration'.format(root.node.node_id) if root.node else 'None'
+    auto_dismiss: False
+    size_hint: .8, .8
+    selected_color: [1, 0, 0, 1]
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: 2
+        GridLayout:
+            cols: 2
+            spacing: 2
+            size_hint: 1, .3
+            Label:
+                text: 'Label'
+            TextInput:
+                id: label_input
+                text: '{}'.format(root.node.label) if root.node else 'Undefined'
+                multiline: False
+            Label:
+                text: 'Color'
+            Button:
+                text: 'Pick a color'
+                on_release: root._open_color_picker()
+            Label:
+                text: 'Connections'
+            BoxLayout:
+                orientation: 'horizontal'
+                Label:
+                    text: '{}'.format(len(root.node.connections)) if root.node else '-1'
+                Button:
+                    text: 'Edit'
+                    on_release: root._open_connections_popup()
+        NodePreview:
+            size_hint: 1, .5
+            node_label: root.node.label if root.node else 'Undefined'
+            node_color: root.node.color if root.node else [1, 1, 1, 1]
+        
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: 2
+            size_hint: 1, .2
+            Button:
+                text: 'Cancel'
+                on_release: root.dismiss()
+            Button:
+                text: 'Apply'
+                on_release: root._apply_changes()

@@ -2,6 +2,7 @@ from random import randint
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
+from kivy.uix.popup import Popup
 from kivy.core.text import Label as CoreLabel
 from kivy.app import App
 from kivy.core.window import Window
@@ -63,6 +64,55 @@ class Node(Widget):
         Rectangle(size=self.label_texture.size, pos=label_pos, texture=self.label_texture)
 
 
+class NodePreview(Widget):
+    node_label = StringProperty('')
+    node_color = ListProperty([1, 1, 1, 1])
+
+    def __init__(self, **kwargs):
+        super(NodePreview, self).__init__(**kwargs)
+        self.bind(pos=self._update_canvas, size=self._update_canvas)
+        self.bind(node_color=self._update_canvas)
+        self.bind(node_label=self._update_canvas)
+        self.preview_node = Node()
+
+
+    def _update_canvas(self, *args):
+        self.canvas.clear()
+        with self.canvas.before:
+            self.preview_node.label = self.node_label
+            self.preview_node.color = self.node_color
+        with self.canvas:
+            Color(.9, .9, .9, 1)
+            rect_bg = Rectangle(size=self.size, pos=self.pos)
+            self.preview_node.pos = (
+                rect_bg.pos[0] + rect_bg.size[0] // 2 - NODE_SIZE // 2,
+                rect_bg.pos[1] + rect_bg.size[1] // 2 - NODE_SIZE // 2
+            )
+            self.preview_node.draw()
+
+
+class NodeConfig(Popup):
+    node = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(Popup, self).__init__(**kwargs)
+        filtered_widgets = filter(
+            lambda widget: isinstance(widget, NodePreview),
+            self.content.children
+        )
+        self._node_preview_widget = list(filtered_widgets)[0]
+
+    def _open_color_picker(self):
+        # TODO: implement a color picker
+        pass
+
+    def _open_connections_popup(self):
+        pass
+
+    def _apply_changes(self):
+        self.dismiss()
+
+
 class GraphCanvas(Widget):
     node = ObjectProperty(Node())
 
@@ -87,8 +137,13 @@ class GraphCanvas(Widget):
     def on_touch_down(self, touch):
         if self.node.collide_point(*touch.pos):
             if touch.is_double_tap:
-                # TODO: implement node config
-                print('double tap on node')
+                ## on double tap, open the node config
+                node_config_popup = NodeConfig()
+                # pass along the node + some attributes
+                node_config_popup.node = self.node
+                # update canvas on popup dismiss
+                node_config_popup.bind(on_dismiss=self._update_canvas)
+                node_config_popup.open()
             else:
                 self.node.hold(touch.pos)
 
