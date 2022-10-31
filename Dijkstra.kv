@@ -33,6 +33,19 @@
         ToolBar:
             size_hint: 1, .1
 
+<ColPopup>:
+    title: 'Select Color'
+    size_hint: .5, .7
+    auto_dismiss: False
+    ColorPickerWidget:
+        color: root.selected_color
+        on_color: root.selected_color = self.color
+        Button:
+            text: 'Finalize'
+            pos_hint: {'center_x': .755, 'y': .02}
+            size_hint: .5, .15
+            on_press: root.dismiss()
+
 <NodeConfig>:
     title: 'Node #{} configuration'.format(root.node.node_id) if root.node else 'None'
     auto_dismiss: False
@@ -51,6 +64,7 @@
                 id: label_input
                 text: '{}'.format(root.node.label) if root.node else 'Undefined'
                 multiline: False
+                on_text: root._on_label_input(self.text)
             Label:
                 text: 'Color'
             Button:

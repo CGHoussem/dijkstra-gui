@@ -3,10 +3,11 @@ from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.uix.popup import Popup
+from kivy.uix.colorpicker import ColorPicker
 from kivy.core.text import Label as CoreLabel
 from kivy.app import App
 from kivy.core.window import Window
-from kivy.properties import StringProperty, ListProperty, BooleanProperty, BoundedNumericProperty, ObjectProperty
+from kivy.properties import StringProperty, ListProperty, BooleanProperty, BoundedNumericProperty, ObjectProperty, NumericProperty
 
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -64,6 +65,14 @@ class Node(Widget):
         Rectangle(size=self.label_texture.size, pos=label_pos, texture=self.label_texture)
 
 
+class ColorPickerWidget(ColorPicker):
+    pass
+
+
+class ColPopup(Popup):
+    selected_color = ListProperty([0, 0, 0, 1])
+
+
 class NodePreview(Widget):
     node_label = StringProperty('')
     node_color = ListProperty([1, 1, 1, 1])
@@ -74,7 +83,6 @@ class NodePreview(Widget):
         self.bind(node_color=self._update_canvas)
         self.bind(node_label=self._update_canvas)
         self.preview_node = Node()
-
 
     def _update_canvas(self, *args):
         self.canvas.clear()
@@ -93,6 +101,7 @@ class NodePreview(Widget):
 
 class NodeConfig(Popup):
     node = ObjectProperty(None)
+    selected_color = ListProperty([0, 0, 0, 1])
 
     def __init__(self, **kwargs):
         super(Popup, self).__init__(**kwargs)
@@ -103,24 +112,40 @@ class NodeConfig(Popup):
         self._node_preview_widget = list(filtered_widgets)[0]
 
     def _open_color_picker(self):
-        # TODO: implement a color picker
-        pass
+        col_popup = ColPopup()
+        col_popup.selected_color = self.node.color
+        col_popup.bind(on_dismiss=self._update_color)
+        col_popup.open()
+
+    def _update_color(self, instance):
+        if self._node_preview_widget:
+            self._node_preview_widget.node_color = instance.selected_color
+        self.selected_color = instance.selected_color
+        return False
+
+    def _on_label_input(self, value):
+        if self._node_preview_widget:
+            self._node_preview_widget.node_label = value
 
     def _open_connections_popup(self):
         pass
 
     def _apply_changes(self):
+        self.node.label = self.ids.label_input.text
+        self.node.color = self.selected_color
         self.dismiss()
 
 
 class GraphCanvas(Widget):
     node = ObjectProperty(Node())
+    update_flag = NumericProperty(0.0)
 
     def __init__(self, **kwargs):
         super(GraphCanvas, self).__init__(**kwargs)
         self.bind(
             pos=self._update_canvas,
             size=self._update_canvas,
+            update_flag=self._update_canvas
         )
         self.node.pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
 
@@ -141,6 +166,7 @@ class GraphCanvas(Widget):
                 node_config_popup = NodeConfig()
                 # pass along the node + some attributes
                 node_config_popup.node = self.node
+                node_config_popup.selected_color = self.node.color
                 # update canvas on popup dismiss
                 node_config_popup.bind(on_dismiss=self._update_canvas)
                 node_config_popup.open()
