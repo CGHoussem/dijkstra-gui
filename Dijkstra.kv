@@ -1,0 +1,34 @@
+#:kivy 2.1.0
+<ToolBar>:
+    BoxLayout:
+        orientation: 'horizontal'
+        Button:
+            text: 'Load'
+            on_press: root._on_load_btn_click()
+        Button:
+            text: 'Save'
+            on_press: root._on_save_btn_click()
+        Button:
+            text: 'Move'
+            on_press: root._on_move_btn_click()
+        Button:
+            text: 'Add'
+            on_press: root._on_add_btn_click()
+        Button:
+            text: 'Delete'
+            on_press: root._on_delete_btn_click()
+        Button:
+            text: 'Connect'
+            on_press: root._on_connect_btn_click()
+        Button:
+            text: 'Dijkstra'
+            on_press: root._on_dijkstra_btn_click()
+
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        title: 'Dijkstra'
+        GraphCanvas:
+            size_hint: 1, .9
+        ToolBar:
+            size_hint: 1, .1
