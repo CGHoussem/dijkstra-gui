@@ -21,13 +21,14 @@ NODE_SIZE = 60
 
 
 class Node(Widget):
+    NODE_COUNT = 0
+
     node_id = BoundedNumericProperty(0, min=0, max=100)
     label = StringProperty('New')
     size = ListProperty([NODE_SIZE, NODE_SIZE])
     color = ListProperty([1, 0, 0, 1])
     inv_color = ListProperty([0, 1, 1, 1])
     offset = ListProperty([0, 0])
-    on_hold = BooleanProperty(False)
     state = StringProperty('normal')
     connections = ListProperty([])
 
@@ -39,19 +40,23 @@ class Node(Widget):
         if 'pos' in kwargs:
             self.pos = kwargs['pos']
 
+        self.node_id = Node.NODE_COUNT
+        Node.NODE_COUNT += 1
+
+        self.label = f'#{self.node_id}'
+
     def preview(self, temp_pos):
         self.draw(temp_pos)
 
     def move(self, new_pos):
-        if self.on_hold:
-            self.pos = (new_pos[0] + self.offset[0], new_pos[1] + self.offset[1])
+        self.pos = (new_pos[0] + self.offset[0], new_pos[1] + self.offset[1])
 
     def hold(self, pos):
         self.offset = (self.pos[0] - pos[0], self.pos[1] - pos[1])
-        self.on_hold = True
+        self.state = 'held'
 
     def release(self):
-        self.on_hold = False
+        self.state = 'normal'
 
     def draw(self, *args):
         Color(*self.color)
@@ -61,8 +66,21 @@ class Node(Widget):
         text = CoreLabel(text=self.label, font_size=16)
         text.refresh()
         self.label_texture = text.texture
-        label_pos = (self.pos[i] + (self.size[i] - self.label_texture.size[i]) / 2 for i in range(2))
+        label_pos = (
+            self.pos[i] + (self.size[i] - self.label_texture.size[i]) / 2 for i in range(2)
+        )
         Rectangle(size=self.label_texture.size, pos=label_pos, texture=self.label_texture)
+
+
+class Connection(Widget):
+    line_color = ListProperty([0, 0, 0, 1])
+    nodes = ListProperty([])
+
+    def draw(self):
+        Color(*self.line_color)
+        pt_1 = [self.nodes[0].pos[i] + NODE_SIZE / 2 for i in range(2)]
+        pt_2 = [self.nodes[1].pos[i] + NODE_SIZE / 2 for i in range(2)]
+        Line(points=[pt_1, pt_2], width=1.2, dash_offset=3, dash_length=1)
 
 
 class ColorPickerWidget(ColorPicker):
@@ -128,6 +146,7 @@ class NodeConfig(Popup):
             self._node_preview_widget.node_label = value
 
     def _open_connections_popup(self):
+        # TODO: implement connections edit popup
         pass
 
     def _apply_changes(self):
@@ -137,7 +156,8 @@ class NodeConfig(Popup):
 
 
 class GraphCanvas(Widget):
-    node = ObjectProperty(Node())
+    nodes = ListProperty([Node(), Node()])
+    connections = ListProperty([])
     update_flag = NumericProperty(0.0)
 
     def __init__(self, **kwargs):
@@ -147,34 +167,47 @@ class GraphCanvas(Widget):
             size=self._update_canvas,
             update_flag=self._update_canvas
         )
-        self.node.pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
+        self.nodes[0].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
+        self.nodes[1].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
+        cnn = Connection()
+        cnn.nodes.append(self.nodes[0])
+        cnn.nodes.append(self.nodes[1])
+        self.connections.append(cnn)
 
     def _update_canvas(self, *args):
         self.canvas.clear()
         with self.canvas:
-            self.node.draw()
+            for connection in self.connections:
+                connection.draw()
+            for node in self.nodes:
+                node.draw()
             self.canvas.ask_update()
 
     def on_touch_move(self, touch):
-        self.node.move(touch.pos)
+        for node in self.nodes:
+            if node.state == 'held':
+                node.move(touch.pos)
+                break
         self._update_canvas()
 
     def on_touch_down(self, touch):
-        if self.node.collide_point(*touch.pos):
-            if touch.is_double_tap:
-                ## on double tap, open the node config
-                node_config_popup = NodeConfig()
-                # pass along the node + some attributes
-                node_config_popup.node = self.node
-                node_config_popup.selected_color = self.node.color
-                # update canvas on popup dismiss
-                node_config_popup.bind(on_dismiss=self._update_canvas)
-                node_config_popup.open()
-            else:
-                self.node.hold(touch.pos)
+        for node in self.nodes:
+            if node.collide_point(*touch.pos):
+                if touch.is_double_tap:
+                    ## on double tap, open the node config
+                    node_config_popup = NodeConfig()
+                    # pass along the node + some attributes
+                    node_config_popup.node = node
+                    node_config_popup.selected_color = node.color
+                    # update canvas on popup dismiss
+                    node_config_popup.bind(on_dismiss=self._update_canvas)
+                    node_config_popup.open()
+                else:
+                    node.hold(touch.pos)
 
     def on_touch_up(self, touch):
-        self.node.release()
+        for node in self.nodes:
+            node.release()
 
 
 class ToolBar(BoxLayout):
