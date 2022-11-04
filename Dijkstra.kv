@@ -70,10 +70,10 @@
             orientation: 'horizontal'
             Button:
                 text: 'Cancel'
-                on_press: root.dismiss()
+                on_press: root._cancel_changes()
             Button:
                 text: 'Apply'
-                on_press: root._apply_new_weights()
+                on_press: root._apply_changes()
                 
 
 <NodeConfig>:
