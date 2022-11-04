@@ -1,4 +1,5 @@
 #:kivy 2.1.0
+
 <ToolBar>:
     BoxLayout:
         orientation: 'horizontal'
@@ -45,6 +46,35 @@
             pos_hint: {'center_x': .755, 'y': .02}
             size_hint: .5, .15
             on_press: root.dismiss()
+
+<EditConnection>:
+    title: 'Node #{} connections'.format(root.node.node_id) if root.node else 'None'
+    auto_dismiss: False
+    size_hint: .7, .7
+    BoxLayout:
+        orientation: 'vertical'
+        # TODO: implement a preview canvas
+        Label:
+            size_hint: 1, .1
+            text: 'Connections Weights'
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            GridLayout:
+                cols: 2
+                spacing: 2
+                size_hint_y: None
+                
+        BoxLayout:
+            size_hint: 1, .2
+            orientation: 'horizontal'
+            Button:
+                text: 'Cancel'
+                on_press: root.dismiss()
+            Button:
+                text: 'Apply'
+                on_press: root._apply_new_weights()
+                
 
 <NodeConfig>:
     title: 'Node #{} configuration'.format(root.node.node_id) if root.node else 'None'
