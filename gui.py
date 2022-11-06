@@ -216,6 +216,7 @@ class EditConnection(Popup):
             new_connection.nodes = [self.node, selected_node]
             new_connection.weight = 0
             self.connections.append(new_connection)
+            selected_node.connections.append(new_connection)
             # update the gridlayout
             self._update_gridlayout()
 
