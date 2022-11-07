@@ -23,10 +23,17 @@ Config.set('kivy', 'exit_on_escape', '0')
 import kivy
 kivy.require("2.1.0")
 
+# custom imports
+from models import Graph
+from controllers import dijkstra, find_path
 
+
+# global variables
 NODE_SIZE = 60
+nodes = []
+connections = []
 
-class Node(Widget):
+class NodeUI(Widget):
     NODE_COUNT = 0
 
     node_id = BoundedNumericProperty(0, min=0, max=100)
@@ -36,17 +43,18 @@ class Node(Widget):
     inv_color = ListProperty([0, 1, 1, 1])
     offset = ListProperty([0, 0])
     state = StringProperty('normal')
+    neighbors = ListProperty([])
 
     label_texture = ObjectProperty()
 
     def __init__(self, **kwargs):
-        super(Node, self).__init__(**kwargs)
+        super(NodeUI, self).__init__(**kwargs)
 
         if 'pos' in kwargs:
             self.pos = kwargs['pos']
 
-        self.node_id = Node.NODE_COUNT
-        Node.NODE_COUNT += 1
+        self.node_id = NodeUI.NODE_COUNT
+        NodeUI.NODE_COUNT += 1
 
         self.label = f'#{self.node_id}'
 
@@ -76,13 +84,33 @@ class Node(Widget):
         )
         Rectangle(size=self.label_texture.size, pos=label_pos, texture=self.label_texture)
 
-nodes = [Node(), Node(), Node()]
-connections = []
+    def add_neighbor(self, neighbor_node):
+        self.neighbors.append(neighbor_node)
 
-class Connection(Widget):
+
+class ConnectionUI(Widget):
+    default_color = ListProperty([0, 0, 0, 1])
+    highlight_color = ListProperty([1, 0, 0, 1])
     line_color = ListProperty([0, 0, 0, 1])
     nodes = ListProperty([])
     weight = NumericProperty()
+
+    def __init__(self, p_nodes, p_weight, **kwargs):
+        super(ConnectionUI, self).__init__(**kwargs)
+
+        if len(p_nodes) != 2:
+            raise SyntaxError()
+
+        self.nodes = p_nodes
+        self.nodes[0].add_neighbor((self.nodes[1], self.nodes[0]))
+        self.nodes[1].add_neighbor((self.nodes[0], self.nodes[1]))
+        self.weight = p_weight
+
+    def highlight(self):
+        self.line_color = self.highlight_color
+
+    def reset_color(self):
+        self.line_color = self.default_color
 
     def draw(self):
         Color(*self.line_color)
@@ -106,16 +134,16 @@ class ColPopup(Popup):
     selected_color = ListProperty([0, 0, 0, 1])
 
 
-class NodePreview(Widget):
+class NodeUIPreview(Widget):
     node_label = StringProperty('')
     node_color = ListProperty([1, 1, 1, 1])
 
     def __init__(self, **kwargs):
-        super(NodePreview, self).__init__(**kwargs)
+        super(NodeUIPreview, self).__init__(**kwargs)
         self.bind(pos=self._update_canvas, size=self._update_canvas)
         self.bind(node_color=self._update_canvas)
         self.bind(node_label=self._update_canvas)
-        self.preview_node = Node()
+        self.preview_node = NodeUI()
 
     def _update_canvas(self, *args):
         self.canvas.clear()
@@ -132,12 +160,12 @@ class NodePreview(Widget):
             self.preview_node.draw()
 
 
-class EditConnection(Popup):
+class EditConnectionUI(Popup):
     node = ObjectProperty(None)
     parent_connections = ListProperty([])
 
     def __init__(self, **kwargs):
-        super(EditConnection, self).__init__(**kwargs)
+        super(EditConnectionUI, self).__init__(**kwargs)
         self.weight_inputs = list()
         self.nodes_dropdown = DropDown()
         self._neighbors = list()
@@ -190,7 +218,7 @@ class EditConnection(Popup):
         for conn in self._connections:
             neighbor_node = conn.nodes[0] if conn.nodes[0] != self.node else conn.nodes[1]
             lbl_widget = Label(
-                text=f"Node ({neighbor_node.label})",
+                text=f"NodeUI ({neighbor_node.label})",
                 size_hint=(.5, None),
                 size_hint_max_x=150,
                 height=30,
@@ -216,7 +244,7 @@ class EditConnection(Popup):
                 on_select=lambda _, val: setattr(nodes_dropdown_btn, 'text', val)
             )
             add_conn_btn = Button(
-                text='Add Connection',
+                text='Add ConnectionUI',
                 on_release=lambda _:self._add_connection(nodes_dropdown_btn.text)
             )
             grid_layout.add_widget(nodes_dropdown_btn)
@@ -229,7 +257,7 @@ class EditConnection(Popup):
                 break
         if self._selected_node:
             # add a connection with this node
-            new_connection = Connection()
+            new_connection = ConnectionUI()
             new_connection.nodes = [self.node, self._selected_node]
             new_connection.weight = 0
             self._connections.append(new_connection)
@@ -245,18 +273,18 @@ class EditConnection(Popup):
         self.dismiss()
 
 
-class NodeConfig(Popup):
+class NodeUIConfig(Popup):
     node = ObjectProperty(None)
     selected_color = ListProperty([0, 0, 0, 1])
 
     def __init__(self, **kwargs):
         super(Popup, self).__init__(**kwargs)
         filtered_widgets = filter(
-            lambda widget: isinstance(widget, NodePreview),
+            lambda widget: isinstance(widget, NodeUIPreview),
             self.content.children
         )
         self._node_preview_widget = list(filtered_widgets)[0]
-        self._edit_conn_popup = EditConnection()
+        self._edit_conn_popup = EditConnectionUI()
         self._edit_conn_popup.parent_connections = connections
         self._edit_conn_popup.bind(on_dismiss=self._update_connections_count)
 
@@ -334,47 +362,47 @@ class FindPath(Popup):
 
         self._start_node_btn = None
         self._dest_node_btn = None
+        self._start_dropdown = DropDown()
+        self._dest_dropdown = DropDown()
         self._init_start_dropdown()
         self._init_dest_dropdown()
 
     def _init_start_dropdown(self):
-        start_dropdown = DropDown()
         btn = Button(text='Select a node', size_hint_y=None, height=32)
-        btn.bind(on_release=lambda btn: start_dropdown.select(btn.text))
-        start_dropdown.add_widget(btn)
+        btn.bind(on_release=lambda btn: self._start_dropdown.select(btn.text))
+        self._start_dropdown.add_widget(btn)
         for node in nodes:
             btn = Button(text=f'{node.label}', size_hint_y=None, height=32)
-            btn.bind(on_release=lambda btn: start_dropdown.select(btn.text))
-            start_dropdown.add_widget(btn)
+            btn.bind(on_release=lambda btn: self._start_dropdown.select(btn.text))
+            self._start_dropdown.add_widget(btn)
 
         self._start_node_btn = Button(
-            text='Select a node', on_release=start_dropdown.open,
+            text='Select a node', on_release=self._start_dropdown.open,
             size_hint_y=None, height=32
         )
 
-        start_dropdown.bind(on_select=lambda _, val: setattr(self._start_node_btn, 'text', val))
+        self._start_dropdown.bind(on_select=lambda _, val: setattr(self._start_node_btn, 'text', val))
 
-        self.gridlayout.add_widget(Label(text='Start Node'))
+        self.gridlayout.add_widget(Label(text='Start NodeUI', size_hint_y=None, height=32))
         self.gridlayout.add_widget(self._start_node_btn)
 
     def _init_dest_dropdown(self):
-        dest_dropdown = DropDown()
         btn = Button(text='Select a node', size_hint_y=None, height=32)
-        btn.bind(on_release=lambda btn: dest_dropdown.select(btn.text))
-        dest_dropdown.add_widget(btn)
+        btn.bind(on_release=lambda btn: self._dest_dropdown.select(btn.text))
+        self._dest_dropdown.add_widget(btn)
         for node in nodes:
             btn = Button(text=f'{node.label}', size_hint_y=None, height=32)
-            btn.bind(on_release=lambda btn: dest_dropdown.select(btn.text))
-            dest_dropdown.add_widget(btn)
+            btn.bind(on_release=lambda btn: self._dest_dropdown.select(btn.text))
+            self._dest_dropdown.add_widget(btn)
 
         self._dest_node_btn = Button(
-            text='Select a node', on_release=dest_dropdown.open,
+            text='Select a node', on_release=self._dest_dropdown.open,
             size_hint_y=None, height=32
         )
 
-        dest_dropdown.bind(on_select=lambda _, val: setattr(self._dest_node_btn, 'text', val))
+        self._dest_dropdown.bind(on_select=lambda _, val: setattr(self._dest_node_btn, 'text', val))
 
-        self.gridlayout.add_widget(Label(text='End Node'))
+        self.gridlayout.add_widget(Label(text='End NodeUI', size_hint_y=None, height=32))
         self.gridlayout.add_widget(self._dest_node_btn)
 
     def _calculate(self, *args):
@@ -387,10 +415,16 @@ class FindPath(Popup):
             if dest_node is None and node.label == self._dest_node_btn.text:
                 dest_node = node
         if start_node and dest_node and start_node != dest_node:
-            # TODO: migrate the models / controllers with the new UI
-            # TODO: finish the calculating method
-            # TODO: fix UI layout of the findpath popup
-            print('do some processing..')
+            dijkstra(graph, start_node)
+            try:
+                path_connections = find_path(graph, start_node, dest_node)
+                for conn in path_connections:
+                    conn.highlight()
+                self.dismiss()
+            except KeyError as _err:
+                _msg = _err.args[0]
+                # TODO: create a error dialog with the msg
+                print(_msg)
 
 
 class GraphCanvas(Widget):
@@ -401,13 +435,8 @@ class GraphCanvas(Widget):
             size=self._update_canvas
         )
 
-        Clock.schedule_once(self._position_nodes, .55)
-
-        cnn = Connection()
-        cnn.nodes.append(nodes[0])
-        cnn.nodes.append(nodes[1])
-        cnn.weight = 15
-        connections.append(cnn)
+        # TODO: find a way to position the nodes after the canvas "last" update
+        Clock.schedule_once(self._position_nodes, 1.0)
 
     def _position_nodes(self, *args):
         nodes[0].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
@@ -437,7 +466,7 @@ class GraphCanvas(Widget):
             if node.collide_point(*touch.pos):
                 if touch.is_double_tap:
                     ## on double tap, open the node config
-                    node_config_popup = NodeConfig()
+                    node_config_popup = NodeUIConfig()
                     # pass along the node + some attributes
                     node_config_popup.node = node
                     node_config_popup.selected_color = node.color
@@ -454,6 +483,10 @@ class GraphCanvas(Widget):
 
 
 class ToolBar(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super(ToolBar, self).__init__(**kwargs)
+
 
     def _on_load_btn_click(self):
         print("load_btn_click")
@@ -474,8 +507,14 @@ class ToolBar(BoxLayout):
         print("connect_btn_click")
 
     def _on_dijkstra_btn_click(self):
-        popup = FindPath()
-        popup.open()
+        self.popup = FindPath()
+        self.popup.open()
+        self.popup.bind(on_dismiss=lambda _: self._update_canvas())
+
+    def _update_canvas(self, *args):
+        # TODO: update GraphCanvas UI
+        # TODO: open a small popup with transparent bg that shows the weight & a reset button
+        pass
 
 
 class MainScreen(BoxLayout):
@@ -483,6 +522,17 @@ class MainScreen(BoxLayout):
 
 
 class DijkstraApp(App):
+    def __init__(self, **kwargs):
+        super(DijkstraApp, self).__init__(**kwargs)
+        self._initialize_global_vars()
+
+    def _initialize_global_vars(self):
+        global nodes, graph, connections
+
+        nodes = [NodeUI(), NodeUI(), NodeUI()]
+        cnn = ConnectionUI(p_nodes=[nodes[0], nodes[1]], p_weight=15)
+        connections.append(cnn)
+        graph = Graph(nodes, connections)
 
     def build(self):
         Window.clearcolor = (0.9, 0.9, 0.9, 1)

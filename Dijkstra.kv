@@ -134,15 +134,13 @@
     BoxLayout:
         orientation: 'vertical'
         Label:
-            size_hint: 1, .2
+            size_hint: 1, None
+            height: 44
             text: 'Find the optimal path'
         GridLayout:
-            size_hint_y: None
+            size_hint: 1, 1
             spacing: 2
             cols: 2
-        Label:
-            size_hint: 1, .2
-            text: 'Weight = ?'
         BoxLayout:
             size_hint: 1, None
             height: 44
@@ -151,5 +149,5 @@
                 text: 'Close'
                 on_release: root.dismiss()
             Button:
-                text: 'Calculate'
+                text: 'Calculate / Preview'
                 on_release: root._calculate()

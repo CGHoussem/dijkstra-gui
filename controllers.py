@@ -24,7 +24,7 @@ def search_min(graph: Graph, queue: list) -> Node:
     mini = math.inf
     node_m = None
     for node in queue:
-        if graph.distances[node] < mini:
+        if graph.distances[node] <= mini:
             mini = graph.distances[node]
             node_m = node
     return node_m
@@ -94,14 +94,17 @@ def find_path(graph: Graph, start_node: Node, dest_node: Node, ret_list=[]) -> l
     """
     if start_node == dest_node:
         return None
+    try:
+        pred_node = graph.preds[dest_node]
+    except KeyError as exc:
+        raise KeyError(
+            f'Connection between {start_node.node_id} and {dest_node.node_id} not found!'
+        ) from exc
 
-    pred_node = graph.preds[dest_node]
     conn = None
     for conn in graph.connections:
         if pred_node in conn.nodes and dest_node in conn.nodes:
             break
-    if conn is None:
-        raise Exception(f'Connection between {pred_node} and {dest_node} not found!')
 
     ret_list.append(conn)
     find_path(graph, start_node, pred_node, ret_list)
