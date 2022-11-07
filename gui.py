@@ -257,9 +257,7 @@ class EditConnectionUI(Popup):
                 break
         if self._selected_node:
             # add a connection with this node
-            new_connection = ConnectionUI()
-            new_connection.nodes = [self.node, self._selected_node]
-            new_connection.weight = 0
+            new_connection = ConnectionUI(p_nodes=[self.node, self._selected_node], p_weight=0)
             self._connections.append(new_connection)
             # update the gridlayout
             self._update_gridlayout()
