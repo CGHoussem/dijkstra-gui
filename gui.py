@@ -321,6 +321,78 @@ class NodeConfig(Popup):
         self.dismiss()
 
 
+class FindPath(Popup):
+
+    def __init__(self, **kwargs):
+        super(Popup, self).__init__(**kwargs)
+
+        gridlayout_widgets = filter(
+            lambda widget: isinstance(widget, GridLayout),
+            self.content.children
+        )
+        self.gridlayout = list(gridlayout_widgets)[0]
+
+        self._start_node_btn = None
+        self._dest_node_btn = None
+        self._init_start_dropdown()
+        self._init_dest_dropdown()
+
+    def _init_start_dropdown(self):
+        start_dropdown = DropDown()
+        btn = Button(text='Select a node', size_hint_y=None, height=32)
+        btn.bind(on_release=lambda btn: start_dropdown.select(btn.text))
+        start_dropdown.add_widget(btn)
+        for node in nodes:
+            btn = Button(text=f'{node.label}', size_hint_y=None, height=32)
+            btn.bind(on_release=lambda btn: start_dropdown.select(btn.text))
+            start_dropdown.add_widget(btn)
+
+        self._start_node_btn = Button(
+            text='Select a node', on_release=start_dropdown.open,
+            size_hint_y=None, height=32
+        )
+
+        start_dropdown.bind(on_select=lambda _, val: setattr(self._start_node_btn, 'text', val))
+
+        self.gridlayout.add_widget(Label(text='Start Node'))
+        self.gridlayout.add_widget(self._start_node_btn)
+
+    def _init_dest_dropdown(self):
+        dest_dropdown = DropDown()
+        btn = Button(text='Select a node', size_hint_y=None, height=32)
+        btn.bind(on_release=lambda btn: dest_dropdown.select(btn.text))
+        dest_dropdown.add_widget(btn)
+        for node in nodes:
+            btn = Button(text=f'{node.label}', size_hint_y=None, height=32)
+            btn.bind(on_release=lambda btn: dest_dropdown.select(btn.text))
+            dest_dropdown.add_widget(btn)
+
+        self._dest_node_btn = Button(
+            text='Select a node', on_release=dest_dropdown.open,
+            size_hint_y=None, height=32
+        )
+
+        dest_dropdown.bind(on_select=lambda _, val: setattr(self._dest_node_btn, 'text', val))
+
+        self.gridlayout.add_widget(Label(text='End Node'))
+        self.gridlayout.add_widget(self._dest_node_btn)
+
+    def _calculate(self, *args):
+        # find the appropriate nodes
+        start_node = None
+        dest_node = None
+        for node in nodes:
+            if start_node is None and node.label == self._start_node_btn.text:
+                start_node = node
+            if dest_node is None and node.label == self._dest_node_btn.text:
+                dest_node = node
+        if start_node and dest_node and start_node != dest_node:
+            # TODO: migrate the models / controllers with the new UI
+            # TODO: finish the calculating method
+            # TODO: fix UI layout of the findpath popup
+            print('do some processing..')
+
+
 class GraphCanvas(Widget):
     def __init__(self, **kwargs):
         super(GraphCanvas, self).__init__(**kwargs)
@@ -402,7 +474,8 @@ class ToolBar(BoxLayout):
         print("connect_btn_click")
 
     def _on_dijkstra_btn_click(self):
-        print("dijkstra_btn_click")
+        popup = FindPath()
+        popup.open()
 
 
 class MainScreen(BoxLayout):

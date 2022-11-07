@@ -124,3 +124,32 @@
             Button:
                 text: 'Apply'
                 on_release: root._apply_changes()
+
+
+
+<FindPath>:
+    title: 'Find the optimal path using Dijkstra algorithm'
+    auto_dismiss: False
+    size_hint: .6, .7
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            size_hint: 1, .2
+            text: 'Find the optimal path'
+        GridLayout:
+            size_hint_y: None
+            spacing: 2
+            cols: 2
+        Label:
+            size_hint: 1, .2
+            text: 'Weight = ?'
+        BoxLayout:
+            size_hint: 1, None
+            height: 44
+            orientation: 'horizontal'
+            Button:
+                text: 'Close'
+                on_release: root.dismiss()
+            Button:
+                text: 'Calculate'
+                on_release: root._calculate()
