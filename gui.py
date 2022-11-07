@@ -1,6 +1,7 @@
 from random import randint
 from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.dropdown import DropDown
@@ -13,7 +14,7 @@ from kivy.core.text import Label as CoreLabel
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.properties import StringProperty, ListProperty, BoundedNumericProperty, ObjectProperty, NumericProperty, BooleanProperty
+from kivy.properties import StringProperty, ListProperty, BoundedNumericProperty, ObjectProperty, NumericProperty
 
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -35,7 +36,6 @@ class Node(Widget):
     inv_color = ListProperty([0, 1, 1, 1])
     offset = ListProperty([0, 0])
     state = StringProperty('normal')
-    connections = ListProperty([])
 
     label_texture = ObjectProperty()
 
@@ -77,6 +77,7 @@ class Node(Widget):
         Rectangle(size=self.label_texture.size, pos=label_pos, texture=self.label_texture)
 
 nodes = [Node(), Node(), Node()]
+connections = []
 
 class Connection(Widget):
     line_color = ListProperty([0, 0, 0, 1])
@@ -133,24 +134,41 @@ class NodePreview(Widget):
 
 class EditConnection(Popup):
     node = ObjectProperty(None)
-    connections = ListProperty([])
+    parent_connections = ListProperty([])
 
     def __init__(self, **kwargs):
         super(EditConnection, self).__init__(**kwargs)
-        self._weight_inputs = []
-        self.bind(node=self._initialize_dropdown)
+        self.weight_inputs = list()
         self.nodes_dropdown = DropDown()
         self._neighbors = list()
+        self._selected_node = None
+        self._connections_backup = None
+        self._connections = list()
 
-    def _initialize_dropdown(self, *args):
+        self.bind(node=self._init)
+
+    def _init(self, *args):
+        self._init_connections()
+        self._init_dropdown()
+
+    def _init_connections(self, *args):
+        self._connections.clear()
+        for _conn in connections:
+            if self.node in _conn.nodes:
+                self._connections.append(_conn)
+
+    def _init_dropdown(self, *args):
+        self.nodes_dropdown.clear_widgets()
+        self._neighbors.clear()
         # add 'Select a node' to the dropdown list
         btn = Button(text='Select a node', size_hint_y=None, height=32)
         btn.bind(on_release=lambda btn: self.nodes_dropdown.select(btn.text))
         self.nodes_dropdown.add_widget(btn)
         # fill the self.node neighbors list
-        for _conn in self.node.connections:
-            _neighbor_node = _conn.nodes[0] if _conn.nodes[0] != self.node else _conn.nodes[1]
-            self._neighbors.append(_neighbor_node)
+        for _conn in connections:
+            if self.node in _conn.nodes:
+                _neighbor_node = _conn.nodes[0] if _conn.nodes[0] != self.node else _conn.nodes[1]
+                self._neighbors.append(_neighbor_node)
         # fill the dropdown list with nodes
         for node in nodes:
             if node != self.node and node not in self._neighbors:
@@ -167,9 +185,9 @@ class EditConnection(Popup):
         scroll_view = list(filtered_widgets)[0]
         grid_layout = scroll_view.children[0]
         grid_layout.clear_widgets()
-        self._weight_inputs.clear()
-        grid_layout.height = len(self.connections)*30 + 30
-        for conn in self.connections:
+        self.weight_inputs.clear()
+        grid_layout.height = len(self._connections) * 30 + 30
+        for conn in self._connections:
             neighbor_node = conn.nodes[0] if conn.nodes[0] != self.node else conn.nodes[1]
             lbl_widget = Label(
                 text=f"Node ({neighbor_node.label})",
@@ -187,7 +205,7 @@ class EditConnection(Popup):
             )
             grid_layout.add_widget(lbl_widget)
             grid_layout.add_widget(weight_widget)
-            self._weight_inputs.append(weight_widget)
+            self.weight_inputs.append(weight_widget)
 
         if len(self._neighbors) > 0:
             nodes_dropdown_btn = Button(
@@ -205,37 +223,31 @@ class EditConnection(Popup):
             grid_layout.add_widget(add_conn_btn)
 
     def _add_connection(self, node_label):
-        selected_node = None
         for node in nodes:
             if node.label == node_label:
-                selected_node = node
+                self._selected_node = node
                 break
-        if selected_node:
+        if self._selected_node:
             # add a connection with this node
             new_connection = Connection()
-            new_connection.nodes = [self.node, selected_node]
+            new_connection.nodes = [self.node, self._selected_node]
             new_connection.weight = 0
-            self.connections.append(new_connection)
-            # add a conection with the other node
-            selected_node.connections.append(new_connection)
+            self._connections.append(new_connection)
             # update the gridlayout
             self._update_gridlayout()
 
     def _cancel_changes(self):
-        # TODO: clean the connections list before on cancel
+        self._init()
         self.dismiss()
 
-    def _apply_changes(self):
-        # apply weights
-        for conn, weight_input in zip(self.connections, self._weight_inputs):
-            conn.weight = int(weight_input.text)
+    def _save_changes(self):
+        self.parent_connections = self._connections
         self.dismiss()
 
 
 class NodeConfig(Popup):
     node = ObjectProperty(None)
     selected_color = ListProperty([0, 0, 0, 1])
-    new_connections = ListProperty([])
 
     def __init__(self, **kwargs):
         super(Popup, self).__init__(**kwargs)
@@ -244,20 +256,37 @@ class NodeConfig(Popup):
             self.content.children
         )
         self._node_preview_widget = list(filtered_widgets)[0]
-        self.bind(node=self._update_new_connections)
-
         self._edit_conn_popup = EditConnection()
-        self._edit_conn_popup.bind(on_dismiss=lambda instance: self._add_new_connections(instance.connections))
+        self._edit_conn_popup.parent_connections = connections
+        self._edit_conn_popup.bind(on_dismiss=self._update_connections_count)
 
-    def _update_new_connections(self, *args):
-        # deep copy node's connections to new_connections
-        self.new_connections = list()
-        for conn in self.node.connections:
-            new_conn = Connection()
-            new_conn.weight = conn.weight
-            new_conn.nodes = conn.nodes
-            self.new_connections.append(new_conn)
-        self._edit_conn_popup.connections = self.new_connections
+        self._connections_count_label = None
+        gridlayout_widgets = filter(
+            lambda widget: isinstance(widget, GridLayout),
+            self.content.children
+        )
+        boxlayout_widgets = filter(
+            lambda widget: isinstance(widget, BoxLayout),
+            list(gridlayout_widgets)[0].children
+        )
+        label_widgets = filter(
+            lambda widget: isinstance(widget, Label),
+            list(boxlayout_widgets)[0].children
+        )
+        self._connections_count_label = list(label_widgets)[1]
+
+
+    def _count_connections(self):
+        _count = 0
+        if self.node:
+            for conn in self._edit_conn_popup.parent_connections:
+                if self.node in conn.nodes:
+                    _count += 1
+        return _count
+
+    def _update_connections_count(self, *args):
+        # update connections count label (gui)
+        self._connections_count_label.text = str(self._count_connections())
 
     def _open_color_picker(self):
         col_popup = ColPopup()
@@ -280,25 +309,19 @@ class NodeConfig(Popup):
         self._edit_conn_popup.node = self.node
         self._edit_conn_popup.open()
 
-    def _add_new_connections(self, new_new_connections):
-        for i in range(len(self.new_connections), len(new_new_connections)):
-            self.new_connections.append(new_new_connections[i])
-
     def _apply_changes(self):
+        global connections
         self.node.label = self.ids.label_input.text
         self.node.color = self.selected_color
-        # copy the weights over to the node's connections
-        for index, new_conn in enumerate(self.new_connections):
-            if index+1 > len(self.node.connections):
-                self.node.connections.append(new_conn)
-            else:
-                self.node.connections[index].weight = new_conn.weight
+        # apply weights & new connections
+        for conn, weight_input in \
+            zip(self._edit_conn_popup.parent_connections, self._edit_conn_popup.weight_inputs):
+            conn.weight = int(weight_input.text)
+        connections = self._edit_conn_popup.parent_connections
         self.dismiss()
 
 
 class GraphCanvas(Widget):
-    connections = ListProperty([])
-
     def __init__(self, **kwargs):
         super(GraphCanvas, self).__init__(**kwargs)
         self.bind(
@@ -312,11 +335,7 @@ class GraphCanvas(Widget):
         cnn.nodes.append(nodes[0])
         cnn.nodes.append(nodes[1])
         cnn.weight = 15
-        nodes[0].connections.append(cnn)
-        nodes[1].connections.append(cnn)
-
-        self.connections_set = set()
-        self._update_connections()
+        connections.append(cnn)
 
     def _position_nodes(self, *args):
         nodes[0].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
@@ -328,7 +347,7 @@ class GraphCanvas(Widget):
         self.canvas.clear()
 
         with self.canvas:
-            for conn in self.connections_set:
+            for conn in connections:
                 conn.draw()
             for node in nodes:
                 node.draw()
@@ -341,15 +360,6 @@ class GraphCanvas(Widget):
                 break
         self._update_canvas()
 
-    def _update_connections(self, *args):
-        tmp = list()
-        for node in nodes:
-            for conn in node.connections:
-                tmp.append(conn)
-        self.connections_set = set(tmp)
-
-        self._update_canvas()
-
     def on_touch_down(self, touch):
         for node in nodes:
             if node.collide_point(*touch.pos):
@@ -360,7 +370,7 @@ class GraphCanvas(Widget):
                     node_config_popup.node = node
                     node_config_popup.selected_color = node.color
                     # update canvas on popup dismiss
-                    node_config_popup.bind(on_dismiss=self._update_connections)
+                    node_config_popup.bind(on_dismiss=self._update_canvas)
                     node_config_popup.open()
                 else:
                     node.hold(touch.pos)

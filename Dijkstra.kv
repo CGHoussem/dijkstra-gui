@@ -72,8 +72,8 @@
                 text: 'Cancel'
                 on_press: root._cancel_changes()
             Button:
-                text: 'Apply'
-                on_press: root._apply_changes()
+                text: 'Save'
+                on_press: root._save_changes()
                 
 
 <NodeConfig>:
@@ -105,7 +105,7 @@
             BoxLayout:
                 orientation: 'horizontal'
                 Label:
-                    text: '{}'.format(len(root.node.connections)) if root.node else '-1'
+                    text: '{}'.format(root._count_connections()) if root.node else '-1'
                 Button:
                     text: 'Edit'
                     on_release: root._open_connections_popup()
