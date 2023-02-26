@@ -301,7 +301,6 @@ class NodeUIConfig(Popup):
         )
         self._connections_count_label = list(label_widgets)[1]
 
-
     def _count_connections(self):
         _count = 0
         if self.node:
@@ -437,9 +436,10 @@ class GraphCanvas(Widget):
         Clock.schedule_once(self._position_nodes, 1.0)
 
     def _position_nodes(self, *args):
-        nodes[0].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
-        nodes[1].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
-        nodes[2].pos = (randint(NODE_SIZE, self.size[0]), randint(NODE_SIZE, self.size[1]))
+        print(self.size)
+        nodes[0].pos = (randint(NODE_SIZE, int(self.size[0])), randint(NODE_SIZE, int(self.size[1])))
+        nodes[1].pos = (randint(NODE_SIZE, int(self.size[0])), randint(NODE_SIZE, int(self.size[1])))
+        nodes[2].pos = (randint(NODE_SIZE, int(self.size[0])), randint(NODE_SIZE, int(self.size[1])))
         self._update_canvas()
 
     def _update_canvas(self, *args):
