@@ -17,22 +17,26 @@ This application is still UNDER DEVELOPMENT!!
 ### Tech
 
 This application uses a number of open source projects to work properly:
-
 * [Pygame](https://www.pygame.org/) - Modules designed for writing video games
 * [Tkinter](https://wiki.python.org/moin/TkInter) - Standard python interface GUI library
 
-And of course this application itself is open source with a public repository on GitHub.
+### Requirements
 
-### Installation
+This application requires [python](https://www.python.org/) to be installed. 
+I have used [conda](https://docs.conda.io/en/latest/) to create the virtual environment.
 
-This application requires [Python](https://www.python.org/) to be installed in your computer.
+In order to create the virtual environment with all of the required packages:
+```bash
+cd dijkstra-gui
+conda create --name venv-dijkstra --file conda_requirements.txt
+```
 
-Install the necessary modules using [pip](https://pypi.org/project/pip/).
+### Execution
 
-```sh
-$ cd dijkstra-gui
-$ pip install -r requirements.txt
-$ python main.py
+In order to activate the virtual environment and open the application, run the following commands:
+```bash
+conda activate venv-dijkstra
+python gui.py
 ```
 
 ### Todos

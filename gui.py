@@ -267,7 +267,23 @@ class EditConnectionUI(Popup):
         self.dismiss()
 
     def _save_changes(self):
-        self.parent_connections = self._connections
+        print(f'old parent connections = {self.parent_connections}')
+        # here we should do the merge or find another solution for
+        # adding the new connections to the global list of connections
+        # self.parent_connections = self._connections
+        # l1 [ 0 1 2 ]
+        # l2 [ 0 3 ]
+        # l1 <> l2 = [ 1 2 3 ]
+        
+        for cnn1 in self._connections:
+            found = False
+            for cnn2 in self.parent_connections:
+                if cnn1 == cnn2:
+                    found = True
+                    break
+            if not found:
+                self.parent_connections.append(cnn1)
+        print(f'new parent connections = {self.parent_connections}')
         self.dismiss()
 
 
@@ -527,7 +543,7 @@ class DijkstraApp(App):
     def _initialize_global_vars(self):
         global nodes, graph, connections
 
-        nodes = [NodeUI(), NodeUI(), NodeUI()]
+        nodes = [NodeUI(), NodeUI(), NodeUI(), NodeUI()]
         cnn = ConnectionUI(p_nodes=[nodes[0], nodes[1]], p_weight=15)
         connections.append(cnn)
         graph = Graph(nodes, connections)
